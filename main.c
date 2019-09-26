@@ -100,9 +100,9 @@
 #include "timers.h"
 /* Xilinx includes. */
 #include "bram.h"
-#include "can_polled.h"
-#include "uart.h"
-#include "uart_polled.h"
+//#include "can_polled.h"
+//#include "uart.h"
+//#include "uart_polled.h"
 #include "xil_printf.h"
 #include "xparameters.h"
 
@@ -135,7 +135,7 @@ long RxtaskCntr = 0;
 int Status;
 
 // laser data buffer
-u8 laser_buffer[LASER_BUF_SIZE];
+//u8 laser_buffer[LASER_BUF_SIZE];
 
 // delay time
 const TickType_t x1second = pdMS_TO_TICKS(DELAY_1_SECOND);
@@ -146,7 +146,7 @@ int main(void) {
   Status = BramCheck();
 
   // check the can
-  Status = CanPsPolledCheck();
+//  Status = CanPsPolledCheck();
 
   // check the uart polled mode
    //Status = UartPolledCheck();
@@ -243,7 +243,7 @@ static void prvRxTask(void *pvParameters) {
 static void prvBRAMTask(void *pvParameters) {
   for (;;) {
     // bram write test
-    XBram_WriteReg(BRAM_BASE_ADDR, 0, Status);
+    XBram_WriteReg(BRAM_BASE_ADDR, 0, 0x111);
 
     vTaskDelay(x1second);
   }
