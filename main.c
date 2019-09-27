@@ -100,16 +100,17 @@
 #include "timers.h"
 /* Xilinx includes. */
 #include "bram.h"
-//#include "can_polled.h"
-//#include "uart.h"
-//#include "uart_polled.h"
-#include "xil_printf.h"
-#include "xparameters.h"
+#include "xstatus.h"
+#include "xuartlite_l.h"
 
 #define TIMER_ID 1
 #define DELAY_10_SECONDS 10000UL
 #define DELAY_1_SECOND 1000UL
+#define DELAY_10_MILLI_SECOND 10UL
 #define TIMER_CHECK_THRESHOLD 9
+
+// uartlite base address
+#define UARTLITE_BASEADDR XPAR_UARTLITE_0_BASEADDR
 
 /************************** Variable Definitions *****************************/
 
@@ -135,9 +136,12 @@ long RxtaskCntr = 0;
 int Status;
 
 // laser data buffer
-//u8 laser_buffer[LASER_BUF_SIZE];
+// u8 laser_buffer[LASER_BUF_SIZE];
 
-// delay time
+/* delay time
+ *
+ */
+const TickType_t x10millisecond = pdMS_TO_TICKS(DELAY_10_MILLI_SECOND);
 const TickType_t x1second = pdMS_TO_TICKS(DELAY_1_SECOND);
 const TickType_t x10seconds = pdMS_TO_TICKS(DELAY_10_SECONDS);
 
@@ -146,10 +150,10 @@ int main(void) {
   Status = BramCheck();
 
   // check the can
-//  Status = CanPsPolledCheck();
+  //  Status = CanPsPolledCheck();
 
   // check the uart polled mode
-   //Status = UartPolledCheck();
+  // Status = UartPolledCheck();
 
   /* Create the two tasks.  The Tx task is given a lower priority than the
   Rx task, so the Rx task will leave the Blocked state and pre-empt the Tx
@@ -241,12 +245,23 @@ static void prvRxTask(void *pvParameters) {
 }
 
 static void prvBRAMTask(void *pvParameters) {
+  u8 laser_dis_h, laser_dis_l;
   for (;;) {
-    // bram write test
-    XBram_WriteReg(BRAM_BASE_ADDR, 0, 0x111);
+    // get head first time
+    if (XUartLite_RecvByte(UARTLITE_BASEADDR) == 0x59) {
 
-    vTaskDelay(x1second);
+      //   get head the second time
+      if (XUartLite_RecvByte(UARTLITE_BASEADDR) == 0x59) {
+        //   get the dis low byte
+        laser_dis_l = XUartLite_RecvByte(UARTLITE_BASEADDR);
+        // get the dis low byte
+        laser_dis_h = XUartLite_RecvByte(UARTLITE_BASEADDR);
+      }
+      //   write dis to the ram
+      XBram_WriteReg(BRAM_BASE_ADDR, 0, (laser_dis_h << 8) | laser_dis_l);
+    }
   }
+  vTaskDelay(x10millisecond);
 }
 
 /*-----------------------------------------------------------*/
