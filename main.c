@@ -146,6 +146,7 @@ const TickType_t x1second = pdMS_TO_TICKS(DELAY_1_SECOND);
 const TickType_t x10seconds = pdMS_TO_TICKS(DELAY_10_SECONDS);
 
 int main(void) {
+	XBram_WriteReg(BRAM_BASE_ADDR, 0, 0x11);
   //	check the bram
   Status = BramCheck();
 
